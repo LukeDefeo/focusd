@@ -60,50 +60,46 @@
     nil))
 
 
+(defn js->clj-keyed [js]
+  (js->clj js :keywordize-keys true))
+
+
+(def js->clj-keyed-first (comp first js->clj-keyed))
+
 (defn <create-window [context-id]
   (go
-    (let [
-          ;_ (swap! window-state assoc context-id :temp)
-          {:keys [id tabs] :as window} (first (js->clj (<! (windows/create)) :keywordize-keys true))]                                      ;;for some reason its a vector
+    (let [{:keys [id] :as window} (js->clj-keyed-first (<! (windows/create)))] ;;for some reason its a vecto,r
       (swap! window-state assoc context-id id)
-      (println " created window for context-id " context-id "with id" id "and rest" window)
       (println "new state " @window-state)
       window)))
 
-
-(defn <context-id->window-id [context]
+(defn <context-id->window-state [context]
   (go
     (if-let [window-id (get @window-state context)]
-      [(first (js->clj (<! (windows/get window-id)))) :existing]
+      [(js->clj-keyed-first (<! (windows/get window-id))) :existing]
       [(<! (<create-window context)) :new])))
 
-
-(defn <move-tab-to-context [{:keys [url id] :as tab} context-id]
-  (println "move tab to context for url " url " tab id " id "context" context-id)
+(defn <move-tab-to-context [{:keys [url id]} context-id]
   (go
-    (let [[dest-window state] (<! (<context-id->window-id context-id))
-          current-window (first (js->clj (<! (windows/get-last-focused))))
-          _ (println "current window" current-window " dest window " dest-window)]
+    (let [current-window (js->clj-keyed-first (<! (windows/get-last-focused)))
+          [dest-window state] (<! (<context-id->window-state context-id))
+          _ (println "current window " current-window "\ndest window " dest-window "\nstate is" state)]
 
-      (when (not= (:id dest-window) (:id current-window))
-        (println "tab with " url "will be moved to " (:id dest-window))
-        (let [moved (<! (tabs/move id (clj->js {:windowId (:id dest-window) :index -1})))
-              _ (when (= :new state) (<! (tabs/remove (-> dest-window :tabs first :id))))
-              focused (<! (windows/update (:id dest-window) (clj->js {:focused true})))
-              active (<! (tabs/update id (clj->js {:active true})))]))
-      )))
-
-(def updated-tabs (chan 100))
+      (if (not= (:id dest-window) (:id current-window))
+        (do
+          (println "tab with " url "will be moved to " (:id dest-window))
+          (<! (tabs/move id (clj->js {:windowId (:id dest-window) :index -1})))
+          (when (= :new state) (<! (tabs/remove (-> dest-window :tabs first :id))))
+          (<! (windows/update (:id dest-window) (clj->js {:focused true})))
+          (<! (tabs/update id (clj->js {:active true}))))
+        (println "not moving tab")))))
 
 (defn process-updated-tab! [[_ _ event]]
   (go
-    (let [{:keys [url] :as event} (js->clj event :keywordize-keys true)
-          _ (println "processing updated tab" url)
-
+    (let [{:keys [url] :as event} (js->clj-keyed event)
           context-id (url->context-id url)]
-      (if context-id
-        (<! (<move-tab-to-context event context-id))
-        (println "no context for" url)))))
+      (when context-id
+        (<! (<move-tab-to-context event context-id))))))
 
 (defn window-id->context-id [window-id]
   (get (set/map-invert @window-state) window-id))
@@ -124,7 +120,7 @@
         ::runtime/on-connect (apply handle-client-connection! event-args)
         ::tabs/on-created (tell-clients-about-new-tab!)
         ::windows/on-removed (handle-closed-window! (first event-args))
-        ::tabs/on-updated (<! (process-updated-tab!  event-args)) ;maybe should be in vector ot prevent nils   ; (process-updated-tab! event-args)
+        ::tabs/on-updated (<! (process-updated-tab! event-args)) ;maybe should be in vector ot prevent nils   ; (process-updated-tab! event-args)
         nil))))
 
 (defn run-chrome-event-loop! [chrome-event-channel]
