@@ -4,7 +4,10 @@
                  [org.clojure/core.async "0.4.474"]
                  [binaryage/chromex "0.6.0"]
                  [binaryage/devtools "0.9.10"]
+                 [re-com "1.3.0"]
+                 [reagent "0.8.1"],
                  [figwheel "0.5.15"]
+
                  [environ "1.1.0"]]
 
   :plugins [[lein-cljsbuild "1.1.7"]

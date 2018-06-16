@@ -15,7 +15,7 @@
 
 
 
-(def window-state (atom {}))                                ;; {:context-id "window-id"}
+(defonce window-state (atom {}))                                ;; {:context-id "window-id"}
 
 (def clients (atom []))
 
@@ -36,7 +36,7 @@
   ;(log "BACKGROUND: starting event loop for client:" (get-sender client))
   (go-loop []
            (when-some [message (<! client)]
-             ;(log "BACKGROUND: got client message:" message "from" (get-sender client))
+             (log "BACKGRO UND: got client message:" message "from" (get-sender client))
              (recur))
            ;(log "BACKGROUND: leaving event loop for client:" (get-sender client))
            (remove-client! client)))
@@ -45,7 +45,11 @@
 
 (defn handle-client-connection! [client]
   (add-client! client)
-  (post-message! client "hello from BACKGROUND PAGE!")
+  ;all clients are the popup page atm
+
+  (println "conenction from " (get-sender client))
+  (post-message! client (clj->js @window-state))
+  ;(post-message! client "hello from BACKGROUND PAGE!")
   (run-client-message-loop! client))
 
 (defn tell-clients-about-new-tab! []
