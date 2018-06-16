@@ -19,20 +19,10 @@
     "128": "images/icon128.png"
   },
   "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
-  "content_scripts": [
-    {
-      "matches": [
-        "<all_urls>"
-      ],
-      "js": [
-        "compiled/content-script/main.js"
-      ],
-      "run_at": "document_end"
-    }
-  ],
+
   "background": {
     "page": "background.html",
-    "persistent": false
+    "persistent": true
   },
   "permissions": [
     "storage",
