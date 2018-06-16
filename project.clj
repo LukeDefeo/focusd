@@ -17,13 +17,14 @@
             [lein-cooper "1.2.2"]]
 
   :source-paths ["src/background"
-                 "src/popup"]
+                 "src/popup"
+                 "src/rules"]
 
   :clean-targets ^{:protect false} ["target"
                                     "resources/unpacked/compiled"
                                     "resources/release/compiled"]
 
-  :cljsbuild {:builds {}}                                                                                                     ; prevent https://github.com/emezeske/lein-cljsbuild/issues/413
+  :cljsbuild {:builds {}}                                   ; prevent https://github.com/emezeske/lein-cljsbuild/issues/413
 
   :profiles {:unpacked
              {:cljsbuild {:builds
@@ -46,7 +47,19 @@
                                            :preloads      [devtools.preload figwheel.preload]
                                            :main          chromex-sample.popup
                                            :optimizations :none
-                                           :source-map    true}}}}}
+                                           :source-map    true}}
+
+                           :rules
+                           {:source-paths ["src/rules"]
+                            :figwheel     true
+                            :compiler     {:output-to     "resources/unpacked/compiled/rules/main.js"
+                                           :output-dir    "resources/unpacked/compiled/rules"
+                                           :asset-path    "compiled/rules"
+                                           :preloads      [devtools.preload figwheel.preload]
+                                           :main          chromex-sample.rules
+                                           :optimizations :none
+                                           :source-map    true}}
+                           }}}
 
              :checkouts
              ; DON'T FORGET TO UPDATE scripts/ensure-checkouts.sh
@@ -55,6 +68,10 @@
                                                        "checkouts/chromex/src/lib"
                                                        "checkouts/chromex/src/exts"]}
                            :popup      {:source-paths ["checkouts/cljs-devtools/src/lib"
+                                                       "checkouts/chromex/src/lib"
+                                                       "checkouts/chromex/src/exts"]}
+
+                           :rules      {:source-paths ["checkouts/cljs-devtools/src/lib"
                                                        "checkouts/chromex/src/lib"
                                                        "checkouts/chromex/src/exts"]}}}}
 
@@ -93,9 +110,9 @@
                                            :elide-asserts true}}}}}}
 
   :aliases {"dev-build"       ["with-profile" "+unpacked,+unpacked-content-script,+checkouts" "cljsbuild" "once"]
-            "fig"             ["with-profile" "+unpacked,+figwheel" "figwheel" "background" "popup"]
+            "fig"             ["with-profile" "+unpacked,+figwheel" "figwheel" "background" "popup" "rules"]
             "fig-dev-no-repl" ["with-profile" "+unpacked,+figwheel,+disable-figwheel-repl,+checkouts" "figwheel" "background" "popup"]
-            "devel"           ["with-profile" "+cooper" "do"                                                                  ; for mac only
+            "devel"           ["with-profile" "+cooper" "do" ; for mac only
                                ["shell" "scripts/ensure-checkouts.sh"]
                                ["cooper"]]
             "release"         ["with-profile" "+release" "do"

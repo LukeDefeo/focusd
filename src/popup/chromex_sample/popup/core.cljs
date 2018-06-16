@@ -5,8 +5,10 @@
             [chromex.logging :refer-macros [log info warn error group group-end]]
             [chromex.protocols :refer [post-message!]]
             [chromex.ext.runtime :as runtime :refer-macros [connect]]
+            [re-com.buttons :refer [button md-circle-icon-button]]
             [reagent.core :as r]
-            ;[re-com.core :as rc]
+            [re-com.util :refer [get-element-by-id item-for-id]]
+    ;[re-com.core :as rc]
             ))
 
 ; -- a message loop ---------------------------------------------------------------------------------------------------------
@@ -54,14 +56,24 @@
 ;              (when (repost-allowed? s)
 ;                [cpts/repost-cpt submit-link])]])))]]))
 
+
 (defn frame-cpt []
-  [:div [:p (str @window-state)]])
+  [button
+   :label "Configure rules"
+   :style {:margin-top "10px"}
+   :on-click (fn []
+               (println "clicked")
+               (js/window.open "rules.html")
+               )]
+  ;[:div [:p (str @window-state)]]
+  )
 
 (defn mount []
-  (r/render [frame-cpt] (aget (query "#main") 0)))
+  (r/render [frame-cpt] (get-element-by-id "app")))
 
 
 (defn init! []
   (log "POPUP:  init")
+  ;(println "url ->" (runtime/get-url "rules.html"))
   (connect-to-background-page!)
   (mount))
