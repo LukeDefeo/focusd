@@ -29,7 +29,7 @@
 
 (defn connect-to-background-page! []
   (let [background-port (runtime/connect)]
-    (post-message! background-port "hello from POPUP!")
+    (post-message! background-port (clj->js [:popup :ping "hello it worksfrom POPUP!"]))
     (run-message-loop! background-port)))
 
 ; -- main entry point -------------------------------------------------------------------------------------------------------

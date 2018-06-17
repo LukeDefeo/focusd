@@ -19,37 +19,64 @@
 
 (def clients (atom []))
 
+
+(defn js->clj-keyed [js]
+  (js->clj js :keywordize-keys true))
+
+(def js->clj-keyed-first (comp first js->clj-keyed))
+
+(defn parse-client-message [js-message]
+  (let [[sender message-type payload] (js->clj-keyed js-message)]
+    [(keyword sender) (keyword message-type) payload]))
+
 ; -- clients manipulation ---------------------------------------------------------------------------------------------------
 
 (defn add-client! [client]
-  ;(log "BACKGROUND: client connected" (get-sender client))
+  (log "BACKGROUND: client connected" (get-sender client))
   (swap! clients conj client))
 
 (defn remove-client! [client]
-  ;(log "BACKGROUND: client disconnected" (get-sender client))
+  (log "BACKGROUND: client disconnected" (get-sender client))
   (let [remove-item (fn [coll item] (remove #(identical? item %) coll))]
     (swap! clients remove-item client)))
 
+
 ; -- client event loop ------------------------------------------------------------------------------------------------------
+(defmulti handle-client-message (fn [[sender message-type message]] [sender message-type]))
+
+;; Handlers for resulting dispatch values
+(defmethod handle-client-message [:rules :updated] [[_ _ message]]
+  
+  (println "got new rules from back ground"))
+
+(defmethod handle-client-message [:popup :ping] [[_ _ message]]
+  (println "got ping " message "from popup"))
+
+
+(defmethod handle-client-message :default [[sender message-type message]]
+  (println "unknown message from " sender " with type " message-type))
+
+
+;(defmethod service-charge [::acc/Basic   ::acc/Savings]  [_] 10)
+
+;(defn handle-client-message [[sender message-type message]]
+;  (cond ()))
+
 
 (defn run-client-message-loop! [client]
-  ;(log "BACKGROUND: starting event loop for client:" (get-sender client))
   (go-loop []
-           (when-some [message (<! client)]
-             (log "BACKGRO UND: got client message:" message "from" (get-sender client))
+           (when-some [message (parse-client-message (<! client))]
+             (log "BACKGROUND: got client message:" message "from" (get-sender client))
+             (handle-client-message message)
              (recur))
-           ;(log "BACKGROUND: leaving event loop for client:" (get-sender client))
            (remove-client! client)))
 
 ; -- event handlers ---------------------------------------------------------------------------------------------------------
 
 (defn handle-client-connection! [client]
   (add-client! client)
-  ;all clients are the popup page atm
-
-  (println "conenction from " (get-sender client))
-  (post-message! client (clj->js @window-state))
-  ;(post-message! client "hello from BACKGROUND PAGE!")
+  (println "connection from " (get-sender client))
+  ;(post-message! client (clj->js @window-state))
   (run-client-message-loop! client))
 
 (defn tell-clients-about-new-tab! []
@@ -63,12 +90,6 @@
     :news
     nil))
 
-
-(defn js->clj-keyed [js]
-  (js->clj js :keywordize-keys true))
-
-
-(def js->clj-keyed-first (comp first js->clj-keyed))
 
 (defn <create-window [context-id]
   (go
