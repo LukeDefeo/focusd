@@ -56,7 +56,7 @@
 
 ; -- main event loop --------------------------------------------------------------------------------------------------------
 
-(defn process-chrome-event [event-num event]
+(defn process-chrome-event [event]
   (go
     (let [[event-id event-args] event]
       (case event-id
@@ -67,11 +67,11 @@
 
 (defn run-chrome-event-loop! [chrome-event-channel]
   (log "BACKGROUND: starting main event loop...")
-  (go-loop [event-num 1]
-           (when-some [event (<! chrome-event-channel)]
-             (<! (process-chrome-event event-num event))
-             (recur (inc event-num)))
-           (log "BACKGROUND: leaving main event loop")))
+  (go-loop []
+    (when-some [event (<! chrome-event-channel)]
+      (<! (process-chrome-event event))
+      (recur))
+    (log "BACKGROUND: leaving main event loop")))
 
 (defn boot-chrome-event-loop! []
   (let [chrome-event-channel (make-chrome-event-channel (chan))]
