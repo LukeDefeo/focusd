@@ -7,73 +7,55 @@
             [chromex.ext.runtime :as runtime :refer-macros [connect]]
             [re-com.buttons :refer [button md-circle-icon-button]]
             [reagent.core :as r]
-            [re-com.util :refer [get-element-by-id item-for-id]]
-    ;[re-com.core :as rc]
-            ))
+            [chromex-sample.shared.util :refer [js->clj-keyed js->clj-keyed-first]]
+            [chromex-sample.shared.communication :refer [parse-client-message send-message!]]
+            [re-com.util :refer [get-element-by-id item-for-id]]))
 
 ; -- a message loop ---------------------------------------------------------------------------------------------------------
 
 (defonce window-state (r/atom {}))
 
-;(defn process-message! [message]
-;  )
+(defmulti handle-client-message (fn [[sender message-type payload]] [sender message-type]))
+
+(defmethod handle-client-message [:background :state-update] [[_ _ payload]]
+  (println "got new rules from back ground" payload)
+  (reset! window-state payload)
+  )
+
+(defmethod handle-client-message [:background :ping] [[sender _ message]]
+  (println "got ping " message "from " sender))
+
+(defmethod handle-client-message :default [[sender message-type payload]]
+  (println "unknown message from " sender " with type " message-type))
+
 
 (defn run-message-loop! [message-channel]
   (log "POPUP: starting message loop...")
   (go-loop []
-    (when-some [message (<! message-channel)]
+    (when-some [message (parse-client-message (<! message-channel))]
       (println "got message " message "from client")
-      (reset! window-state (js->clj message :keywordize-keys true))
+      (handle-client-message message)
       (recur))
     (log "POPUP: leaving message loop")))
 
 (defn connect-to-background-page! []
   (let [background-port (runtime/connect)]
-    (post-message! background-port (clj->js [:popup :ping "hello it worksfrom POPUP!"]))
+    (send-message! background-port :popup :ping "Hello from popup")
     (run-message-loop! background-port)))
 
-; -- main entry point -------------------------------------------------------------------------------------------------------
 
-;(defn main-cpt []
-;  (let [submit-link (build-hn-submit-link)
-;        s (list-stories)
-;        rs (list-related-stories)]
-;    [rc/v-box
-;     :size "auto"
-;     :children
-;     [(if (error?)
-;        [cpts/error-cpt (:error @app-state)]
-;        (if (loading?)
-;          [cpts/loading-cpt]
-;          (if (no-results?)
-;            [cpts/blank-cpt submit-link]
-;            [rc/v-box
-;             :size "auto"
-;             :gap "10px"
-;             :children
-;             [[cpts/hn-cpt s rs]
-;              [rc/line]
-;              (when (repost-allowed? s)
-;                [cpts/repost-cpt submit-link])]])))]]))
-
-
-(defn frame-cpt []
+(defn main-cpt []
   [button
    :label "Configure rules"
    :style {:margin-top "10px"}
    :on-click (fn []
                (println "clicked")
-               (js/window.open "rules.html")
-               )]
-  ;[:div [:p (str @window-state)]]
-  )
+               (js/window.open "rules.html"))])
 
 (defn mount []
-  (r/render [frame-cpt] (get-element-by-id "app")))
-
+  (r/render [main-cpt] (get-element-by-id "app")))
 
 (defn init! []
   (log "POPUP:  init")
-  ;(println "url ->" (runtime/get-url "rules.html"))
   (connect-to-background-page!)
   (mount))

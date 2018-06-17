@@ -11,23 +11,14 @@
             [chromex.ext.windows :as windows]
             [chromex.ext.runtime :as runtime]
             [clojure.set :as set]
+            [chromex-sample.shared.util :refer [js->clj-keyed js->clj-keyed-first]]
+            [chromex-sample.shared.communication :refer [parse-client-message send-message!]]
             [chromex-sample.background.storage :refer [test-storage!]]))
-
 
 
 (defonce window-state (atom {}))                                ;; {:context-id "window-id"}
 
 (def clients (atom []))
-
-
-(defn js->clj-keyed [js]
-  (js->clj js :keywordize-keys true))
-
-(def js->clj-keyed-first (comp first js->clj-keyed))
-
-(defn parse-client-message [js-message]
-  (when-let [[sender message-type payload] (js->clj-keyed js-message)]
-    [(keyword sender) (keyword message-type) payload]))
 
 ; -- clients manipulation ---------------------------------------------------------------------------------------------------
 
@@ -44,24 +35,14 @@
 ; -- client event loop ------------------------------------------------------------------------------------------------------
 (defmulti handle-client-message (fn [[sender message-type message]] [sender message-type]))
 
-;; Handlers for resulting dispatch values
 (defmethod handle-client-message [:rules :updated] [[_ _ message]]
-  
   (println "got new rules from back ground"))
 
 (defmethod handle-client-message [:popup :ping] [[_ _ message]]
   (println "got ping " message "from popup"))
 
-
 (defmethod handle-client-message :default [[sender message-type message]]
   (println "unknown message from " sender " with type " message-type))
-
-
-;(defmethod service-charge [::acc/Basic   ::acc/Savings]  [_] 10)
-
-;(defn handle-client-message [[sender message-type message]]
-;  (cond ()))
-
 
 (defn run-client-message-loop! [client]
   (go-loop []
@@ -71,17 +52,13 @@
              (recur))
            (remove-client! client)))
 
-; -- event handlers ---------------------------------------------------------------------------------------------------------
-
 (defn handle-client-connection! [client]
   (add-client! client)
   (println "connection from " (get-sender client))
-  ;(post-message! client (clj->js @window-state))
-  (run-client-message-loop! client))
-
-(defn tell-clients-about-new-tab! []
-  (doseq [client @clients]
-    (post-message! client "a new tab was created")))
+  (send-message! client :background :ping "hello")
+  (send-message! client :background :state-update @window-state)
+  (run-client-message-loop! client)
+  )
 
 ; -- main event loop --------------------------------------------------------------------------------------------------------
 
@@ -89,7 +66,6 @@
   (if (or (str/starts-with? url "https://www.bbc.co.uk") (str/starts-with? url "http://testcontext.org"))
     :news
     nil))
-
 
 (defn <create-window [context-id]
   (go
@@ -143,7 +119,6 @@
     (let [[event-id event-args] event]
       (case event-id
         ::runtime/on-connect (apply handle-client-connection! event-args)
-        ::tabs/on-created (tell-clients-about-new-tab!)
         ::windows/on-removed (handle-closed-window! (first event-args))
         ::tabs/on-updated (<! (process-updated-tab! event-args)) ;maybe should be in vector ot prevent nils   ; (process-updated-tab! event-args)
         nil))))
