@@ -51,7 +51,7 @@
   (add-client! client)
   (println "connection from " (get-sender client))
   (send-message! client :background :ping "hello")
-  (send-message! client :background :state-update @tm/window-state)
+  (send-message! client :background :state-update @tm/*window-state)
   (run-client-message-loop! client))
 
 ; -- main event loop --------------------------------------------------------------------------------------------------------

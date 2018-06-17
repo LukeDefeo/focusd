@@ -10,7 +10,7 @@
     ))
 
 
-(defonce window-state (atom {}))                                ;; {:context-id "window-id"}
+(defonce *window-state (atom {}))                                ;; {:context-id "window-id"}
 
 (defn url->context-id [url]
   (if (or (str/starts-with? url "https://www.bbc.co.uk") (str/starts-with? url "http://testcontext.org"))
@@ -20,13 +20,13 @@
 (defn <create-window [context-id]
   (go
     (let [{:keys [id] :as window} (js->clj-keyed-first (<! (windows/create)))] ;;for some reason its a vecto,r
-      (swap! window-state assoc context-id id)
-      (println "new state " @window-state)
+      (swap! *window-state assoc context-id id)
+      (println "new state " @*window-state)
       window)))
 
 (defn <context-id->window-state [context]
   (go
-    (if-let [window-id (get @window-state context)]
+    (if-let [window-id (get @*window-state context)]
       [(js->clj-keyed-first (<! (windows/get window-id))) :existing]
       [(<! (<create-window context)) :new])))
 
@@ -53,13 +53,13 @@
         (<! (<move-tab-to-context event context-id))))))
 
 (defn window-id->context-id [window-id]
-  (get (set/map-invert @window-state) window-id))
+  (get (set/map-invert @*window-state) window-id))
 
 (defn handle-closed-window! [window-id]
   (println "window cldosed" window-id)
   (if-let [context-id (window-id->context-id window-id)]
     (do
-      (swap! window-state dissoc context-id)
+      (swap! *window-state dissoc context-id)
       (println "removed window " window-id " from state for context" context-id))
     (println "unknown window closed"))
-  (println "state now" @window-state))
+  (println "state now" @*window-state))
