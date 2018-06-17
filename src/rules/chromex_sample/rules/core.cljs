@@ -10,8 +10,6 @@
 
 (defonce window-state (r/atom {}))
 
-;(defn process-message! [message]
-;  )
 
 (defn run-message-loop! [message-channel]
   (log "RULES: starting message loop...")
