@@ -5,31 +5,39 @@
             [chromex.logging :refer-macros [log info warn error group group-end]]
             [chromex.protocols :refer [post-message!]]
             [chromex.ext.runtime :as runtime :refer-macros [connect]]
-            [reagent.core :as r]))
+            [chromex-sample.rules.page :as page]
+            [chromex-sample.shared.util :refer [js->clj-keyed js->clj-keyed-first]]
+            [chromex-sample.shared.communication :refer [parse-client-message send-message!]]))
 
 
-(defonce window-state (r/atom {}))
+(defmulti handle-client-message (fn [[sender message-type payload]] [sender message-type]))
 
+(defmethod handle-client-message [:background :state-update] [[_ _ payload]]
+  (reset! page/app-state payload)
+  )
+
+(defmethod handle-client-message [:background :ping] [[_ _ payload]]
+  (println "got ping " payload "from background"))
+
+(defmethod handle-client-message :default [[sender message-type payload]]
+  (println "unknown message from " sender " with type " message-type))
 
 (defn run-message-loop! [message-channel]
   (log "RULES: starting message loop...")
   (go-loop []
-           (when-some [message (<! message-channel)]
-             (println "got message " message "from client")
-             (reset! window-state (js->clj message :keywordize-keys true))
+           (when-some [message (parse-client-message (<! message-channel))]
+             (println "got message " message "from background")
              (recur))
            (log "RULES: leaving message loop")))
 
 (defn connect-to-background-page! []
   (let [background-port (runtime/connect)]
-    (post-message! background-port "hello from RULES!")
     (run-message-loop! background-port)))
 
 (defn mount []
-  (println "i have mounted"))
+  (page/mount))
 
 (defn init! []
-  (log "RULES:  init")
+  (log "RULES: init")
   (connect-to-background-page!)
-  (mount)
-  )
+  (mount))

@@ -7,7 +7,7 @@
                  [re-com "1.3.0"]
                  [reagent "0.8.1"],
                  [figwheel "0.5.15"]
-
+                 [cljsjs/react-input-autosize "2.0.0-1"]
                  [environ "1.1.0"]]
 
   :plugins [[lein-cljsbuild "1.1.7"]

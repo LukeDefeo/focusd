@@ -6,9 +6,7 @@
     [cljs.core.async :refer [<! chan >! close!]]
     [chromex.ext.tabs :as tabs]
     [chromex.ext.windows :as windows]
-    [chromex-sample.shared.util :refer [js->clj-keyed js->clj-keyed-first]]
-    ))
-
+    [chromex-sample.shared.util :refer [js->clj-keyed js->clj-keyed-first]]))
 
 (defonce *window-state (atom {}))                                ;; {:context-id "window-id"}
 
