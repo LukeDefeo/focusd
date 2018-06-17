@@ -28,30 +28,31 @@
 
 
 ; -- client event loop ------------------------------------------------------------------------------------------------------
-(defmulti handle-client-message (fn [[sender message-type message]] [sender message-type]))
+(defmulti handle-client-message (fn [[sender message-type payload]] [sender message-type]))
 
-(defmethod handle-client-message [:rules :updated] [[_ _ message]]
+(defmethod handle-client-message [:rules :state-update] [[_ _ payload]]
+  (reset! tm/*contexts payload)
   (println "got new rules from back ground"))
 
 (defmethod handle-client-message [:popup :ping] [[_ _ message]]
   (println "got ping " message "from popup" " and keyword is " ::runtime/on-connect))
 
-(defmethod handle-client-message :default [[sender message-type message]]
+(defmethod handle-client-message :default [[sender message-type payload]]
   (println "unknown message from " sender " with type " message-type))
 
 (defn run-client-message-loop! [client]
   (go-loop []
-           (when-some [message (parse-client-message (<! client))]
-             (log "BACKGROUND: got client message:" message "from" (get-sender client))
-             (handle-client-message message)
-             (recur))
-           (remove-client! client)))
+    (when-some [message (parse-client-message (<! client))]
+      (log "BACKGROUND: got client message:" message "from" (get-sender client))
+      (handle-client-message message)
+      (recur))
+    (remove-client! client)))
 
 (defn handle-client-connection! [client]
   (add-client! client)
   (println "connection from " (get-sender client))
   (send-message! client :background :ping "hello")
-  (send-message! client :background :state-update @tm/*window-state)
+  (send-message! client :background :state-update @tm/*contexts)
   (run-client-message-loop! client))
 
 ; -- main event loop --------------------------------------------------------------------------------------------------------

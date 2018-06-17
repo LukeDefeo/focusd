@@ -10,11 +10,13 @@
             [chromex-sample.shared.communication :refer [parse-client-message send-message!]]))
 
 
+(def *background-port (atom nil))
+
 (defmulti handle-client-message (fn [[sender message-type payload]] [sender message-type]))
 
 (defmethod handle-client-message [:background :state-update] [[_ _ payload]]
-  (reset! page/app-state payload)
-  )
+  (println "resetting state")
+  (reset! page/*contexts payload))
 
 (defmethod handle-client-message [:background :ping] [[_ _ payload]]
   (println "got ping " payload "from background"))
@@ -26,16 +28,19 @@
   (log "RULES: starting message loop...")
   (go-loop []
            (when-some [message (parse-client-message (<! message-channel))]
-             (println "got message " message "from background")
+             (println "got message " message "from background foo")
+             (handle-client-message message)
              (recur))
            (log "RULES: leaving message loop")))
 
 (defn connect-to-background-page! []
   (let [background-port (runtime/connect)]
+    (reset! *background-port background-port)
     (run-message-loop! background-port)))
 
 (defn mount []
-  (page/mount))
+  (page/mount (fn [contexts]
+                (send-message! @*background-port :rules :state-update contexts))))
 
 (defn init! []
   (log "RULES: init")

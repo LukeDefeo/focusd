@@ -8,16 +8,17 @@
     [re-com.box :refer [h-box v-box box gap]]
     [re-com.misc :refer [input-text]]
     [re-com.util :refer [get-element-by-id item-for-id]]
+    [chromex-sample.shared.communication :refer [parse-client-message send-message!]]
     cljsjs.react-input-autosize))
 
 
-(defonce app-state
-         (reagent/atom {:contexts [{:name  "News"
-                                    :rules [["bbc.co.uk" "sport"]
-                                            ["facebook.com" "messages"]]}
-                                   {:name  "monitoring"
-                                    :rules [["new-relic"]
-                                            ["stack driver"]]}]}))
+(defonce *contexts
+         (reagent/atom [{:name  "News"
+                         :rules [["bbc.co.uk" "sport"]
+                                 ["facebook.com" "messages"]]}
+                        {:name  "monitoring"
+                         :rules [["new-relic"]
+                                 ["stack driver"]]}]))
 
 
 (def double-whitespace-regexp #"[ \t]{2,}")
@@ -78,22 +79,27 @@
                    :on-click (fn [] (swap! *context update :rules conj [""]))]]])))
 
 
-(defn main [app-state]
+(defn main [*contexts save-fn]
   (fn []
-    (let [*contexts (reagent/cursor app-state [:contexts])]
-      [v-box
-       :style {:background "white"
-               :padding    "20px"}
-       :children
-       [[title :level :level1 :label "Context defintions"]
-        (->> (range 0 (count @*contexts))
-             (map (fn [i] [context-component (reagent/cursor *contexts [i])])))
-        [button
-         :label "Add Context"
-         :style {:margin-top "10px"}
-         :on-click (fn [] (swap! *contexts conj {:name "new context"
-                                                 :rules []}))]]])))
+    [v-box
+     :style {:background "white"
+             :padding    "20px"}
+     :children
+     [[title :level :level1 :label "Context defintions"]
+      (->> (range 0 (count @*contexts))
+           (map (fn [i] [context-component (reagent/cursor *contexts [i])])))
+      [button
+       :label "Add Context"
+       :style {:margin-top "10px"}
+       :on-click (fn [] (swap! *contexts conj {:name  "new context"
+                                               :id (.getTime (js/Date.))
+                                               :rules [[""]]}))]
+      [button
+       :label "Save"
+       :style {:margin-top "10px"}
+       :on-click (fn [] (save-fn @*contexts))]
+      ]]))
 
 (defn mount
-  []
-  (reagent/render [main app-state] (get-element-by-id "app")))
+  [save-fn]
+  (reagent/render [main *contexts save-fn] (get-element-by-id "app")))
