@@ -26,7 +26,7 @@
 (def js->clj-keyed-first (comp first js->clj-keyed))
 
 (defn parse-client-message [js-message]
-  (let [[sender message-type payload] (js->clj-keyed js-message)]
+  (when-let [[sender message-type payload] (js->clj-keyed js-message)]
     [(keyword sender) (keyword message-type) payload]))
 
 ; -- clients manipulation ---------------------------------------------------------------------------------------------------
