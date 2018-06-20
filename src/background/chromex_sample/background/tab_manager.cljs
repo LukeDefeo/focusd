@@ -1,5 +1,6 @@
 (ns chromex-sample.background.tab-manager
-  (:require-macros [cljs.core.async.macros :refer [go go-loop]])
+  (:require-macros [cljs.core.async.macros :refer [go go-loop]]
+                   [com.rpl.specter :refer [select select-one select-first transform setval select-any]])
   (:require
     [clojure.string :as str]
     [clojure.set :as set]
@@ -7,6 +8,7 @@
     [chromex.ext.tabs :as tabs]
     [chromex.ext.windows :as windows]
     [chromex-sample.shared.util :refer [js->clj-keyed js->clj-keyed-first]]))
+
 
 (defonce *window-state (atom {}))
 (defonce *contexts (atom []))
@@ -19,12 +21,10 @@
 (defn url-matches-context?
   "returns nil if no match, if matches returns the number of conditions that were used in the match"
   [url {:keys [rules] :as context}]
-  (when-let
-    [match (->>
-             rules
-             (filter (partial url-matches-rule? url))
-             (sort-by count)
-             last)]
+  (when-let [match (->> rules
+                        (filter (partial url-matches-rule? url))
+                        (sort-by count)
+                        last)]
     (count match)))
 
 (defn url->context-id [url contexts]
@@ -65,7 +65,7 @@
           (when (= :new state) (<! (tabs/remove (-> dest-window :tabs first :id))))
           (<! (windows/update (:id dest-window) (clj->js {:focused true})))
           (<! (tabs/update id (clj->js {:active true}))))
-        (println "not moving tab")))))
+        (println "not moving tab " url " as already opened in suitable context")))))
 
 
 (defn process-updated-tab! [[_ _ event]]
@@ -80,7 +80,6 @@
   (get (set/map-invert @*window-state) window-id))
 
 (defn handle-closed-window! [window-id]
-  (println "window cldosed" window-id)
   (if-let [context-id (window-id->context-id window-id)]
     (do
       (swap! *window-state dissoc context-id)
@@ -97,7 +96,7 @@
 
   ; since we cant pass the id
   (def sample-window-state {12312 "window1"
-                            552 "window2"})
+                            552   "window2"})
   (def sample-contexts [{
                          :id    12312
                          :name  "News2"

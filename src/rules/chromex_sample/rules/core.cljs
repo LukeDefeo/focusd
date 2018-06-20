@@ -28,7 +28,7 @@
   (log "RULES: starting message loop...")
   (go-loop []
            (when-some [message (parse-client-message (<! message-channel))]
-             (println "got message " message "from background foo")
+             (println "got message " message "from background")
              (handle-client-message message)
              (recur))
            (log "RULES: leaving message loop")))

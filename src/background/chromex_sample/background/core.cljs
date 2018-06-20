@@ -11,7 +11,8 @@
             [chromex-sample.background.tab-manager :as tm]
             [chromex-sample.shared.util :refer [js->clj-keyed js->clj-keyed-first]]
             [chromex-sample.shared.communication :refer [parse-client-message send-message!]]
-            [chromex-sample.background.storage :refer [test-storage!]]))
+            [chromex-sample.background.storage :refer [store-contexts <fetch-contexts]]))
+
 
 (def clients (atom []))
 
@@ -30,9 +31,10 @@
 ; -- client event loop ------------------------------------------------------------------------------------------------------
 (defmulti handle-client-message (fn [[sender message-type payload]] [sender message-type]))
 
-(defmethod handle-client-message [:rules :state-update] [[_ _ payload]]
-  (reset! tm/*contexts payload)
-  (println "got new rules from back ground"))
+(defmethod handle-client-message [:rules :state-update] [[_ _ contexts]]
+  (reset! tm/*contexts contexts)
+  (store-contexts contexts)
+  (println "got new contexts from back ground"))
 
 (defmethod handle-client-message [:popup :ping] [[_ _ message]]
   (println "got ping " message "from popup" " and keyword is " ::runtime/on-connect))
@@ -56,6 +58,7 @@
   (run-client-message-loop! client))
 
 ; -- main event loop --------------------------------------------------------------------------------------------------------
+
 
 (defn process-chrome-event [event]
   (go
@@ -83,7 +86,10 @@
 
 ; -- main entry point -------------------------------------------------------------------------------------------------------
 
+(defn load-contexts []
+  (go (reset! tm/*contexts (or (<! (<fetch-contexts)) []))))
+
 (defn init! []
   (log "BACKGROUND: init")
-  (test-storage!)
+  (load-contexts)
   (boot-chrome-event-loop!))

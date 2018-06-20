@@ -3,7 +3,20 @@
   (:require [cljs.core.async :refer [<! chan]]
             [chromex.logging :refer-macros [log info warn error group group-end]]
             [chromex.protocols :refer [get set]]
-            [chromex.ext.storage :as storage]))
+            [chromex.ext.storage :as storage]
+            [chromex-sample.shared.util :refer [js->clj-keyed]]))
+
+
+(defn store-contexts [contexts]
+  (let [local-storage (storage/get-local)
+        contexts {:contexts contexts}]
+    (println "storing " contexts)
+    (set local-storage (clj->js contexts))))
+
+(defn <fetch-contexts []
+  (go
+    (let [local-storage (storage/get-local)]
+      (:contexts (first (first (js->clj-keyed (<! (get local-storage "contexts")))))))))
 
 (defn test-storage! []
   (let [local-storage (storage/get-local)]
