@@ -39,32 +39,30 @@
     :id))
 
 
-(defn <create-window [context-id tab-id]
+(defn <create-window-with-tab [context-id tab-id]
   (go
-    (let [{:keys [id] :as window} (js->clj-keyed-first (<! (windows/create (clj->js {:tabId tab-id}))))] ;;for some reason its a vector
+    (let [{:keys [id] :as window} (js->clj-keyed-first (<! (windows/create (clj->js {:tabId tab-id}))))]
       (swap! *window-state assoc context-id id)
       (println "new state " @*window-state)
       window)))
 
-(defn <context-id->window-state [context tab-id]
+(defn <context-id->window [context]
   (go
-    (if-let [window-id (get @*window-state context)]
-      [(js->clj-keyed-first (<! (windows/get window-id))) :existing]
-      [(<! (<create-window context tab-id)) :new])))
+    (when-let [window-id (get @*window-state context)]
+      (js->clj-keyed-first (<! (windows/get window-id))))))
 
 (defn <move-tab-to-context [{:keys [url id]} context-id]
   (go
     (let [current-window (js->clj-keyed-first (<! (windows/get-last-focused)))
-          [dest-window state] (<! (<context-id->window-state context-id id))
-          _ (println "current window " current-window "\ndest window " dest-window "\nstate is" state)]
-
-      (when
-        (and
-          (not= (:id dest-window) (:id current-window))
-          (not= state :new))
-        (println "tab with " url "will be moved to " (:id dest-window))
-        (<! (tabs/move id (clj->js {:windowId (:id dest-window) :index -1})))
-        (<! (tabs/update id (clj->js {:active true})))))))
+          dest-window (<! (<context-id->window context-id))]
+      (cond
+        (nil? dest-window) (<create-window-with-tab context-id id)
+        (= current-window dest-window) (println "window already in correct context")
+        :else
+        (do
+          (println "tab with " url "will be moved to " (:id dest-window))
+          (<! (tabs/move id (clj->js {:windowId (:id dest-window) :index -1})))
+          (<! (tabs/update id (clj->js {:active true}))))))))
 
 
 (defn process-updated-tab! [[_ _ event]]
