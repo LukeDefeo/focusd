@@ -107,7 +107,18 @@
                                            :asset-path    "compiled/popup"
                                            :main          chromex-sample.popup
                                            :optimizations :advanced
-                                           :elide-asserts true}}}}}}
+                                           :elide-asserts true}}
+
+                           :rules
+                           {:source-paths ["src/rules"]
+                            :figwheel     true
+                            :compiler     {:output-to     "resources/release/compiled/rules.js"
+                                           :output-dir    "resources/release/compiled/rules-temp"
+                                           :asset-path    "compiled/rules-temp"
+                                           :main          chromex-sample.rules
+                                           :optimizations :advanced
+                                           :elide-asserts true}}
+                           }}}}
 
   :aliases {"dev-build"       ["with-profile" "+unpacked,+unpacked-content-script,+checkouts" "cljsbuild" "once"]
             "fig"             ["with-profile" "+unpacked,+figwheel" "figwheel" "background" "popup" "rules"]
@@ -117,5 +128,5 @@
                                ["cooper"]]
             "release"         ["with-profile" "+release" "do"
                                ["clean"]
-                               ["cljsbuild" "once" "background" "popup"]]
+                               ["cljsbuild" "once" "background" "popup" "rules"]]
             "package"         ["shell" "scripts/package.sh"]})
