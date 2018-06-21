@@ -31,9 +31,9 @@
                           {:background
                            {:source-paths ["src/background"]
                             :figwheel     true
-                            :compiler     {:output-to     "resources/unpacked/compiled/background/main.js"
-                                           :output-dir    "resources/unpacked/compiled/background"
-                                           :asset-path    "compiled/background"
+                            :compiler     {:output-to     "resources/unpacked/compiled/background.js"
+                                           :output-dir    "resources/unpacked/compiled/background-temp"
+                                           :asset-path    "compiled/background-temp"
                                            :preloads      [devtools.preload figwheel.preload]
                                            :main          chromex-sample.background
                                            :optimizations :none
@@ -41,9 +41,9 @@
                            :popup
                            {:source-paths ["src/popup"]
                             :figwheel     true
-                            :compiler     {:output-to     "resources/unpacked/compiled/popup/main.js"
-                                           :output-dir    "resources/unpacked/compiled/popup"
-                                           :asset-path    "compiled/popup"
+                            :compiler     {:output-to     "resources/unpacked/compiled/popup.js"
+                                           :output-dir    "resources/unpacked/compiled/popup-temp"
+                                           :asset-path    "compiled/popup-temp"
                                            :preloads      [devtools.preload figwheel.preload]
                                            :main          chromex-sample.popup
                                            :optimizations :none
@@ -52,9 +52,9 @@
                            :rules
                            {:source-paths ["src/rules"]
                             :figwheel     true
-                            :compiler     {:output-to     "resources/unpacked/compiled/rules/main.js"
-                                           :output-dir    "resources/unpacked/compiled/rules"
-                                           :asset-path    "compiled/rules"
+                            :compiler     {:output-to     "resources/unpacked/compiled/rules.js"
+                                           :output-dir    "resources/unpacked/compiled/rules-temp"
+                                           :asset-path    "compiled/rules-temp"
                                            :preloads      [devtools.preload figwheel.preload]
                                            :main          chromex-sample.rules
                                            :optimizations :none
@@ -95,15 +95,15 @@
                           {:background
                            {:source-paths ["src/background"]
                             :compiler     {:output-to     "resources/release/compiled/background.js"
-                                           :output-dir    "resources/release/compiled/background"
-                                           :asset-path    "compiled/background"
+                                           :output-dir    "resources/release/compiled/background-temp"
+                                           :asset-path    "compiled/background-temp"
                                            :main          chromex-sample.background
                                            :optimizations :advanced
                                            :elide-asserts true}}
                            :popup
                            {:source-paths ["src/popup"]
                             :compiler     {:output-to     "resources/release/compiled/popup.js"
-                                           :output-dir    "resources/release/compiled/popup"
+                                           :output-dir    "resources/release/compiled/popup-temp"
                                            :asset-path    "compiled/popup"
                                            :main          chromex-sample.popup
                                            :optimizations :advanced
