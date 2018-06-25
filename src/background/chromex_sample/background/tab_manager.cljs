@@ -51,7 +51,7 @@
     (when-let [window-id (get @*window-state context)]
       (js->clj-keyed-first (<! (windows/get window-id))))))
 
-(defn <move-tab-to-context [{:keys [url id]} context-id]
+(defn <move-tab-to-context! [{:keys [url id]} context-id]
   (go
     (let [current-window (js->clj-keyed-first (<! (windows/get-last-focused)))
           dest-window (<! (<context-id->window context-id))]
@@ -70,7 +70,7 @@
     (let [{:keys [url] :as event} (js->clj-keyed event)
           context-id (url->context-id url @*contexts)]
       (when context-id
-        (<! (<move-tab-to-context event context-id))))))
+        (<! (<move-tab-to-context! event context-id))))))
 
 
 (defn window-id->context-id [window-id]
