@@ -51,15 +51,14 @@
     (when-let [window-id (get @*window-state context)]
       (js->clj-keyed-first (<! (windows/get window-id))))))
 
-(defn <move-tab-to-context! [{:keys [url id]} context-id]
+(defn <move-tab-to-context! [{:keys [url id windowId] :as tab} context-id]
   (go
-    (let [current-window (js->clj-keyed-first (<! (windows/get-last-focused)))
-          dest-window (<! (<context-id->window context-id))]
+    (let [dest-window (<! (<context-id->window context-id))]
       (cond
         (nil? dest-window) (<create-window-with-tab context-id id)
-        (= current-window dest-window) (println "window already in correct context")
-        ;todo should use the tabs current window rather than the users current window since tabs can get refreshed when they are in the background
-        ;in the case of google mail notifications
+        ;We use the tabs current window rather than the users current window since tabs
+        ;can get refreshed when they are in the background in the case of google mail notifications
+        (= windowId (:id dest-window)) (println "window already in correct context new")
         :else
         (do
           (println "tab with " url "will be moved to " (:id dest-window))
