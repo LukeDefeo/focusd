@@ -58,6 +58,8 @@
       (cond
         (nil? dest-window) (<create-window-with-tab context-id id)
         (= current-window dest-window) (println "window already in correct context")
+        ;todo should use the tabs current window rather than the users current window since tabs can get refreshed when they are in the background
+        ;in the case of google mail notifications
         :else
         (do
           (println "tab with " url "will be moved to " (:id dest-window))
