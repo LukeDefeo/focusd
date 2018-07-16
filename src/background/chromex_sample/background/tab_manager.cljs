@@ -85,16 +85,25 @@
     (println "unknown window closed"))
   (println "state now" @*window-state))
 
+(defn join-window-id-to-contexts [contexts window-state]
+  (map
+    (fn [context]
+      (let [window-id (get window-state (:id context))]
+        (assoc context :window-id window-id)))
+    contexts))
+
+(defn get-context-switcher-state []
+  (join-window-id-to-contexts @*contexts @*window-state))
 
 (comment
-  ; the problem with the array with window id approach is that its difficult to add new entrys added from the ui
+  ; the problem with the array with window idz approach is that its difficult to add new entrys added from the ui
 
   ; another option is to have 2 atoms, one with just the array without window id and another which maintains the mapping from window context id to window id
   ; when ui is updated we just replace the array atom.
 
   ; since we cant pass the id
-  (def sample-window-state {12312 "window1"
-                            552   "window2"})
+  (def sample-window-state {12312 "window-id"
+                            552   "window-id2"})
   (def sample-contexts [{
                          :id    12312
                          :name  "News2"

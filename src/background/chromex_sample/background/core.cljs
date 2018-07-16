@@ -11,7 +11,8 @@
             [chromex-sample.background.tab-manager :as tm]
             [chromex-sample.shared.util :refer [js->clj-keyed js->clj-keyed-first]]
             [chromex-sample.shared.communication :refer [parse-client-message send-message!]]
-            [chromex-sample.background.storage :refer [store-contexts <fetch-contexts]]))
+            [chromex-sample.background.storage :refer [store-contexts <fetch-contexts]]
+            [clojure.string :as str]))
 
 
 (def clients (atom []))
@@ -50,11 +51,24 @@
       (recur))
     (remove-client! client)))
 
+
+(defn get-sender-id [client]
+  (if (str/ends-with? (:url (js->clj-keyed (get-sender client))) "popup.html")
+    :popup
+    :rules))
+
 (defn handle-client-connection! [client]
   (add-client! client)
-  (println "connection from " (get-sender client))
-  (send-message! client :background :ping "hello")
-  (send-message! client :background :state-update @tm/*contexts)
+  (let [sender-id (get-sender-id client)]
+    (println "connection from wat?" sender-id)
+    (if (= sender-id :rules)
+      (do
+        (send-message! client :background :ping "hello")
+        (send-message! client :background :state-update @tm/*contexts))
+      (do
+        (send-message! client :background :ping "hello")
+        (send-message! client :background :state-update (tm/get-context-switcher-state)))))
+
   (run-client-message-loop! client))
 
 ; -- main event loop --------------------------------------------------------------------------------------------------------
