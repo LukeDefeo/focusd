@@ -53,19 +53,6 @@
     (run-message-loop! background-port)))
 
 
-(defn main-cpt []
-  [button
-   :label "Configure rules"
-   :style {:margin-top "10px"}
-   :on-click (fn []
-               (println "clicked")
-               (js/window.open "rules.html"))])
-
-(defn mount []
-  (r/render [main-cpt] (get-element-by-id "app")))
-
 (defn init! []
   (log "POPUP:  init")
-  (connect-to-background-page!)
-  ;(mount)
-  )
+  (connect-to-background-page!))

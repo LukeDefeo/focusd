@@ -60,16 +60,29 @@
 (defn render-context [{:keys [name]}]
   [:div {:style {:width "300px"}} name])
 
-(defn main [contexts]
-  [list-comp
-   contexts
-   (fn [{:keys [name]}] [:div name])
-   (fn [item] (println "selected" item))])
+
+(defn rule-link []
+  [button
+   :label "Configure rules"
+   :style {:margin-top "10px"}
+   :on-click (fn []
+               (println "clicked")
+               (js/window.open "rules.html"))])
+
+(defn main [contexts selected-fn]
+  [v-box
+   :children
+   [[list-comp
+     contexts
+     render-context
+     selected-fn]
+    [rule-link]
+    ]] )
 
 (defn mount
   [contexts selected-fn]
   (reagent/render
-    [list-comp contexts render-context selected-fn] (get-element-by-id "app"))
+    [main contexts selected-fn] (get-element-by-id "app"))
   (.focus (get-element-by-id "list-box")))
 
 

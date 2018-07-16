@@ -80,6 +80,7 @@
       (case event-id
         ::runtime/on-connect (apply handle-client-connection! event-args)
         ::windows/on-removed (tm/handle-closed-window! (first event-args))
+        ::windows/on-focus-changed (tm/handle-window-focused! (first (js->clj-keyed event-args)))
         ::tabs/on-updated (<! (tm/process-updated-tab! event-args))
         nil))))
 
@@ -95,6 +96,7 @@
   (let [chrome-event-channel (make-chrome-event-channel (chan))]
     (tabs/tap-on-updated-events chrome-event-channel)
     (windows/tap-on-removed-events chrome-event-channel)
+    (windows/tap-on-focus-changed-events chrome-event-channel)
     (runtime/tap-all-events chrome-event-channel)
     (run-chrome-event-loop! chrome-event-channel)))
 

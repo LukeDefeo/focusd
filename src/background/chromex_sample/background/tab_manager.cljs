@@ -10,6 +10,7 @@
     [chromex-sample.shared.util :refer [js->clj-keyed js->clj-keyed-first]]))
 
 
+(defonce *ordered-windows (atom []))
 (defonce *window-state (atom {}))
 (defonce *contexts (atom []))
 
@@ -73,11 +74,16 @@
       (when context-id
         (<! (<move-tab-to-context! event context-id))))))
 
-
 (defn window-id->context-id [window-id]
   (get (set/map-invert @*window-state) window-id))
 
+(defn handle-window-focused! [window-id]
+  (swap! *ordered-windows #(distinct (cons window-id %)))
+  (println @*ordered-windows "<<<  windows focused")
+  )
+
 (defn handle-closed-window! [window-id]
+  (swap! *ordered-windows #(remove (partial = window-id) %))
   (if-let [context-id (window-id->context-id window-id)]
     (do
       (swap! *window-state dissoc context-id)
@@ -85,15 +91,27 @@
     (println "unknown window closed"))
   (println "state now" @*window-state))
 
-(defn join-window-id-to-contexts [contexts window-state]
-  (map
-    (fn [context]
-      (let [window-id (get window-state (:id context))]
-        (assoc context :window-id window-id)))
-    contexts))
+
+
+(defn join-window-id-to-contexts [contexts window-state ordered-windows]
+  (let [
+        inverted-window-state (set/map-invert window-state)
+
+        order-windows-with-ctx-id (map (fn [window-id]
+                                         {:id        (get inverted-window-state window-id :unmanaged)
+                                          :window-id window-id}) (remove #(= % -1) ordered-windows))
+
+
+        context-names (->> contexts
+                           (map #(dissoc % :rules))
+                           (cons {:name "Unmanaged"
+                                  :id   :unmanaged}))]
+
+    ;for some reason the order is maintianed
+    (seq (set/join order-windows-with-ctx-id context-names))))
 
 (defn get-context-switcher-state []
-  (join-window-id-to-contexts @*contexts @*window-state))
+  (join-window-id-to-contexts @*contexts @*window-state @*ordered-windows))
 
 (comment
   ; the problem with the array with window idz approach is that its difficult to add new entrys added from the ui
