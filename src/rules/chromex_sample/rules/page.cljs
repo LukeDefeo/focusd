@@ -68,9 +68,12 @@
     (let [{:keys [name rules]} @*context]
       [v-box
        :gap "0px"
-       :children [[title
-                   :level :level2
-                   :label name]
+       :children [[input-text
+                   :model name
+                   :on-change (fn [x] (swap! *context assoc :name x))
+                   ;:level :level2
+                   ;:label name
+                   ]
                   (->> (range 0 (count rules))
                        (map (fn [i] [rule-component (reagent/cursor *context [:rules i])])))
                   [button

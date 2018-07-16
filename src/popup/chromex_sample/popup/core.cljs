@@ -28,15 +28,15 @@
                           (do
                             (println "activating window " id)
                             (windows/update id (clj->js {:focused true})))
-                          (println "no window id for context"))
-                        ))
-  )
+                          (println "no window id for context")))))
 
 (defmethod handle-client-message [:background :ping] [[sender _ message]]
   (println "got ping " message "from " sender))
 
+
 (defmethod handle-client-message :default [[sender message-type payload]]
   (println "unknown message from " sender " with type " message-type))
+
 
 (defn run-message-loop! [message-channel]
   (log "POPUP: starting message loop...")
@@ -46,6 +46,7 @@
       (handle-client-message message)
       (recur))
     (log "POPUP: leaving message loop")))
+
 
 (defn connect-to-background-page! []
   (let [background-port (runtime/connect)]
