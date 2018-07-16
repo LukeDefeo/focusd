@@ -19,6 +19,17 @@
     "128": "assets/images/icon128.png"
   },
 
+  "commands" : {
+
+    "_execute_browser_action": {
+      "suggested_key": {
+        "windows": "Ctrl+E",
+        "mac": "Command+Shift+E",
+        "chromeos": "Ctrl+E",
+        "linux": "Ctrl+E"
+      }
+    }
+  },
   "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
 
   "background": {
