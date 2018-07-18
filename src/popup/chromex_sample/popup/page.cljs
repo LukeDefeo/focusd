@@ -65,11 +65,15 @@
   [button
    :label "Configure rules"
    :style {:margin-top "10px"}
-   :on-click (fn []
-               (println "clicked")
-               (js/window.open "rules.html"))])
+   :on-click (fn [] (js/window.open "rules.html"))])
 
-(defn main [contexts selected-fn]
+(defn clean-ctx [clean-context-fn]
+  [button
+   :label "Clean ctx"
+   :style {:margin-top "10px"}
+   :on-click clean-context-fn])
+
+(defn main [contexts selected-fn clean-context-fn]
   [v-box
    :children
    [[list-comp
@@ -77,12 +81,12 @@
      render-context
      selected-fn]
     [rule-link]
-    ]] )
+    [clean-ctx clean-context-fn]]] )
 
 (defn mount
-  [contexts selected-fn]
+  [contexts selected-fn clean-context-fn]
   (reagent/render
-    [main contexts selected-fn] (get-element-by-id "app"))
+    [main contexts selected-fn clean-context-fn] (get-element-by-id "app"))
   (.focus (get-element-by-id "list-box")))
 
 

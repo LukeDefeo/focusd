@@ -7,6 +7,7 @@
     [cljs.core.async :refer [<! chan >! close!]]
     [chromex.ext.tabs :as tabs]
     [chromex.ext.windows :as windows]
+    [com.rpl.specter :refer [ALL MAP-VALS selected?] :as sp]
     [chromex-sample.shared.util :refer [js->clj-keyed js->clj-keyed-first]]))
 
 
@@ -110,6 +111,23 @@
 
 (defn get-context-switcher-state []
   (drop 1 (join-window-id-to-contexts @*contexts @*context->window-state @*ordered-windows-state)))
+
+
+(defn clean-current-context []
+  (go
+    (let [{:keys [id tabs] :as current-window} (js->clj-keyed-first (<! (windows/get-current (clj->js {:populate true}))))
+
+          current-ctx-id (window-id->context-id id)
+
+          current-ctx (select-first [ALL (selected? :id #(= % current-ctx-id))] @*contexts)
+
+          to-kill (->>
+                    tabs
+                    (remove (fn [tab] (url-matches-context? (:url tab) current-ctx)))
+                    (map :id))]
+
+      (when current-ctx
+        (tabs/remove (clj->js to-kill))))))
 
 (comment
   ; the problem with the array with window idz approach is that its difficult to add new entrys added from the ui

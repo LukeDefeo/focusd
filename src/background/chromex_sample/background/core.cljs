@@ -37,6 +37,10 @@
   (store-contexts contexts)
   (println "got new contexts from back ground"))
 
+(defmethod handle-client-message [:popup :clean-ctx] [[_ _ _]]
+  (println "Will clean current context")
+  (tm/clean-current-context))
+
 (defmethod handle-client-message [:popup :ping] [[_ _ message]]
   (println "got ping " message "from popup" " and keyword is " ::runtime/on-connect))
 

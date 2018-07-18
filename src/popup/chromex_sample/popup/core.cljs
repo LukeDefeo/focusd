@@ -17,6 +17,7 @@
 ; -- a message loop ---------------------------------------------------------------------------------------------------------
 
 (defonce window-state (r/atom {}))
+(defonce *background-port (r/atom nil))
 
 (defmulti handle-client-message (fn [[sender message-type payload]] [sender message-type]))
 
@@ -28,7 +29,10 @@
                           (do
                             (println "activating window " id)
                             (windows/update id (clj->js {:focused true})))
-                          (println "no window id for context")))))
+                          (println "no window id for context")))
+              (fn []
+                (send-message! @*background-port :popup :clean-ctx nil)
+                (js/window.close))))
 
 (defmethod handle-client-message [:background :ping] [[sender _ message]]
   (println "got ping " message "from " sender))
@@ -50,6 +54,7 @@
 
 (defn connect-to-background-page! []
   (let [background-port (runtime/connect)]
+    (reset! *background-port background-port)
     (send-message! background-port :popup :ping "Hello from popup")
     (run-message-loop! background-port)))
 
