@@ -10,8 +10,8 @@
     [chromex-sample.shared.util :refer [js->clj-keyed js->clj-keyed-first]]))
 
 
-(defonce *ordered-windows (atom []))
-(defonce *window-state (atom {}))
+(defonce *ordered-windows-state (atom []))
+(defonce *context->window-state (atom {}))
 (defonce *contexts (atom []))
 
 (defn url-matches-rule?
@@ -43,13 +43,13 @@
 (defn <create-window-with-tab [context-id tab-id]
   (go
     (let [{:keys [id] :as window} (js->clj-keyed-first (<! (windows/create (clj->js {:tabId tab-id}))))]
-      (swap! *window-state assoc context-id id)
-      (println "new state " @*window-state)
+      (swap! *context->window-state assoc context-id id)
+      (println "new state " @*context->window-state)
       window)))
 
 (defn <context-id->window [context]
   (go
-    (when-let [window-id (get @*window-state context)]
+    (when-let [window-id (get @*context->window-state context)]
       (js->clj-keyed-first (<! (windows/get window-id))))))
 
 (defn <move-tab-to-context! [{:keys [url id windowId] :as tab} context-id]
@@ -75,43 +75,41 @@
         (<! (<move-tab-to-context! event context-id))))))
 
 (defn window-id->context-id [window-id]
-  (get (set/map-invert @*window-state) window-id))
+  (get (set/map-invert @*context->window-state) window-id))
 
 (defn handle-window-focused! [window-id]
-  (swap! *ordered-windows #(distinct (cons window-id %)))
-  (println @*ordered-windows "<<<  windows focused")
+  (swap! *ordered-windows-state #(distinct (cons window-id %)))
+  (println @*ordered-windows-state "<<<  windows focused")
   )
 
 (defn handle-closed-window! [window-id]
-  (swap! *ordered-windows #(remove (partial = window-id) %))
+  (swap! *ordered-windows-state #(remove (partial = window-id) %))
   (if-let [context-id (window-id->context-id window-id)]
     (do
-      (swap! *window-state dissoc context-id)
+      (swap! *context->window-state dissoc context-id)
       (println "removed window " window-id " from state for context" context-id))
     (println "unknown window closed"))
-  (println "state now" @*window-state))
-
-
+  (println "state now" @*context->window-state))
 
 (defn join-window-id-to-contexts [contexts window-state ordered-windows]
-  (let [
-        inverted-window-state (set/map-invert window-state)
+  (let [inverted-window-state (set/map-invert window-state)
 
         order-windows-with-ctx-id (map (fn [window-id]
                                          {:id        (get inverted-window-state window-id :unmanaged)
-                                          :window-id window-id}) (remove #(= % -1) ordered-windows))
+                                          :window-id window-id}) (remove #(= % -1) ordered-windows))]
+    (map (fn [{:keys [id window-id]}]
 
-
-        context-names (->> contexts
-                           (map #(dissoc % :rules))
-                           (cons {:name "Unmanaged"
-                                  :id   :unmanaged}))]
-
-    ;for some reason the order is maintianed
-    (seq (set/join order-windows-with-ctx-id context-names))))
+           (let [name (->>
+                        contexts
+                        (filter (fn [x] (= id (:id x))))
+                        first
+                        :name)]
+             {:window-id window-id
+              :name      (or name "Unmanaged")}))
+         order-windows-with-ctx-id)))
 
 (defn get-context-switcher-state []
-  (join-window-id-to-contexts @*contexts @*window-state @*ordered-windows))
+  (drop 1 (join-window-id-to-contexts @*contexts @*context->window-state @*ordered-windows-state)))
 
 (comment
   ; the problem with the array with window idz approach is that its difficult to add new entrys added from the ui

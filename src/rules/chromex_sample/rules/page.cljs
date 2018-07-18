@@ -70,7 +70,7 @@
        :gap "0px"
        :children [[input-text
                    :model name
-                   :on-change (fn [x] (swap! *context assoc :name x))
+                   :on-change (fn [text] (swap! *context assoc :name text ))
                    ;:level :level2
                    ;:label name
                    ]
