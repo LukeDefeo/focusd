@@ -20,14 +20,16 @@
   [url rule]
   (every? (partial str/includes? url) rule))
 
+(def num-chars-in-list-of-strings (comp count flatten (partial map seq)))
+
 (defn url-matches-context?
   "returns nil if no match, if matches returns the number of conditions that were used in the match"
   [url {:keys [rules] :as context}]
-  (when-let [match (->> rules
-                        (filter (partial url-matches-rule? url))
-                        (sort-by count)
-                        last)]
-    (count match)))
+  (->> rules
+       (filter (partial url-matches-rule? url))
+       (map num-chars-in-list-of-strings)
+       sort
+       last))
 
 (defn url->context-id [url contexts]
   "looks through all contexts and finds the most specific match (deterimined by the number of conditions)"
@@ -35,6 +37,7 @@
     contexts
     (map (fn [ctx] [(url-matches-context? url ctx) ctx]))
     (filter (fn [[match _]] match))
+
     (sort-by first)
     last
     second
@@ -43,6 +46,7 @@
 
 (defn <create-window-with-tab [context-id tab-id]
   (go
+    (println "creating window for ctx" context-id)
     (let [{:keys [id] :as window} (js->clj-keyed-first (<! (windows/create (clj->js {:tabId tab-id}))))]
       (swap! *context->window-state assoc context-id id)
       (println "new state " @*context->window-state)
