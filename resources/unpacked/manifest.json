@@ -20,7 +20,6 @@
   },
 
   "commands" : {
-
     "clean_context_kill": {
       "suggested_key": {
         "default": "Ctrl+Shift+K",

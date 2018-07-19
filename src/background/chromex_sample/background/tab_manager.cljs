@@ -60,7 +60,7 @@
   (go
     (let [dest-window (<! (<context-id->window context-id))]
       (cond
-        (nil? dest-window) (<create-window-with-tab context-id id)
+        (nil? dest-window) (<! (<create-window-with-tab context-id id))
         ;We use the tabs current window rather than the users current window since tabs
         ;can get refreshed when they are in the background in the case of google mail notifications
         (= windowId (:id dest-window)) (println "window already in correct context new")
@@ -83,8 +83,7 @@
 
 (defn handle-window-focused! [window-id]
   (swap! *ordered-windows-state #(distinct (cons window-id %)))
-  (println @*ordered-windows-state "<<<  windows focused")
-  )
+  (println @*ordered-windows-state "<<<  windows focused"))
 
 (defn handle-closed-window! [window-id]
   (swap! *ordered-windows-state #(remove (partial = window-id) %))
