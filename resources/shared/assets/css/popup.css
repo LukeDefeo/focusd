@@ -1,0 +1,7 @@
+.list-box:hover {
+    background-color: lightblue;
+}
+
+.list-box-highlighted {
+    background-color: blue;
+}
