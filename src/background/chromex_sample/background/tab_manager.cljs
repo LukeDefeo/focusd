@@ -110,7 +110,7 @@
          order-windows-with-ctx-id)))
 
 (defn get-context-switcher-state []
-  (drop 1 (join-window-id-to-contexts @*contexts @*context->window-state @*ordered-windows-state)))
+  (join-window-id-to-contexts @*contexts @*context->window-state @*ordered-windows-state))
 
 
 (defn clean-current-context []

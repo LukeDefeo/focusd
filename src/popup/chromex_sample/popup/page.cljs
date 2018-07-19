@@ -2,6 +2,7 @@
   (:require
     [reagent.core :as reagent]
     [reagent.ratom :refer-macros [reaction]]
+    [re-com.core :refer [line]]
     [re-com.text :refer [title label]]
     [re-com.buttons :refer [button md-circle-icon-button]]
     [clojure.string :as str]
@@ -12,7 +13,7 @@
 (defn wrap-in-div [highlighted? click-Handler comp]
   ;;for some reason when i set background color dynamically based on highlighted? it prevent hover state from working
   ;;seting the class dynamically is a work around
-  [:div {:class (if highlighted? "list-item-highlighted" "list-item")
+  [:div {:class    (if highlighted? "list-item-highlighted" "list-item")
          :on-click click-Handler} comp])
 
 (def down-arrow 40)
@@ -34,7 +35,7 @@
       :else (inc cur))))
 
 
-(defn list-comp [items render-fn selected-fn]
+(defn list-component [items render-fn selected-fn]
   (let [state (reagent/atom {:index 0})]
     (fn [items render-fn selected-fn]
       (let [{:keys [index]} @state]
@@ -64,31 +65,53 @@
 
 
 (defn rule-link []
-  [button
-   :label "Configure rules"
-   :style {:margin-top "10px"}
-   :on-click (fn [] (js/window.open "rules.html"))])
+  [:a
+   {:tab-index -1                                           ;makes non focusable with keyboard
+    :href   "rules.html"
+    :target "_blank"
+    :title  "Edit context definitions"}
+   [:img {:src    "assets/images/settings-50.png"
+          :width  "20px"
+          :height "20px"}]])
 
 (defn clean-ctx [clean-context-fn]
-  [button
-   :label "Clean ctx"
-   :style {:margin-top "10px"}
-   :on-click clean-context-fn])
+  [:input
+   {:tab-index -1                                           ;makes non focusable with keyboard
+    :type      "image"
+    :src       "assets/images/cross-24.png"
+    :title     "Kill tabs not matching context rules"
+    :style     {:width  "20px"
+                :height "20px"}
+    :on-click  clean-context-fn}])
+
+
+(defn sized-box [child size]
+  [box :child child :size size])
+
+(defn top-component [current-ctx clean-context-fn]
+  [h-box
+   :children
+   [[sized-box [:div {:title "Current context"} current-ctx] "2 0 auto"]
+    [clean-ctx clean-context-fn]
+    [rule-link]]])
 
 (defn main [contexts selected-fn clean-context-fn]
   [v-box
+   :padding "2px 0 0 0"
    :children
-   [[list-comp
-     contexts
+   [[top-component (:name (first contexts)) clean-context-fn]
+    [line
+     :size "1px"
+     :color "grey"]
+    [list-component
+     (rest contexts)
      render-context
-     selected-fn]
-    [rule-link]
-    [clean-ctx clean-context-fn]]] )
+     selected-fn]]])
 
 (defn mount
   [contexts selected-fn clean-context-fn]
   (reagent/render
     [main contexts selected-fn clean-context-fn] (get-element-by-id "app"))
-  (.focus (get-element-by-id "list-box")))
+  (.focus (get-element-by-id "list-component")))
 
 

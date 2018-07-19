@@ -7,5 +7,5 @@
 }
 
 #list-component {
-    outline: none;  
+    outline: none; /* prevents annoying blue focus highlight */
 }
