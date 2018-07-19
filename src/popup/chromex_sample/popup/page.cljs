@@ -61,8 +61,8 @@
 
 
 (defn render-context [{:keys [name]}]
-  [:div {:style {:width "300px"}} name])
-
+  [:div {:style {:padding "2px"
+                 :width "250px"}} name])
 
 (defn rule-link []
   [:a
@@ -72,6 +72,9 @@
     :title  "Edit context definitions"}
    [:img {:src    "assets/images/settings-50.png"
           :width  "20px"
+          :style  {:margin "5px"
+                   ;:background-color "red"
+                   }
           :height "20px"}]])
 
 (defn clean-ctx [clean-context-fn]
@@ -80,8 +83,8 @@
     :type      "image"
     :src       "assets/images/cross-24.png"
     :title     "Kill tabs not matching context rules"
-    :style     {:width  "20px"
-                :height "20px"}
+    :style     {:width  "17px"
+                :height "17px"}
     :on-click  clean-context-fn}])
 
 
@@ -90,8 +93,10 @@
 
 (defn top-component [current-ctx clean-context-fn]
   [h-box
+   :align :center
    :children
-   [[sized-box [:div {:title "Current context"} current-ctx] "2 0 auto"]
+   [[sized-box [:div {:style {:padding "2px"}
+                      :title "Current context"} current-ctx] "2 0 auto"]
     [clean-ctx clean-context-fn]
     [rule-link]]])
 
@@ -102,7 +107,7 @@
    [[top-component (:name (first contexts)) clean-context-fn]
     [line
      :size "1px"
-     :color "grey"]
+     :color "#847996"]
     [list-component
      (rest contexts)
      render-context

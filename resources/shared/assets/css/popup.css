@@ -1,11 +1,39 @@
 .list-item:hover {
-    background-color: lightblue;
+    background-color: #c2cfb2;
 }
 
 .list-item-highlighted {
-    background-color: blue;
+    background-color: #8db580;
 }
 
 #list-component {
-    outline: none; /* prevents annoying blue focus highlight */
+    outline: none;
 }
+
+a {
+    outline: none;
+}
+
+img {
+    outline: none;
+}
+
+input {
+    outline: none;
+}
+
+
+/**
+$color1: hsla(27%, 24%, 82%, 1);
+$color2: hsla(263%, 12%, 53%, 1);
+$color3: hsla(87%, 23%, 75%, 1);
+$color4: hsla(105%, 26%, 61%, 1);
+$color5: hsla(242%, 16%, 35%, 1);
+
+
+$color1: rgba(221, 209, 199, 1);
+$color2: rgba(132, 121, 150, 1);
+$color3: rgba(194, 207, 178, 1);
+$color4: rgba(141, 181, 128, 1);
+$color5: rgba(75, 74, 103, 1);
+ */
