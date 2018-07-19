@@ -37,7 +37,6 @@
     contexts
     (map (fn [ctx] [(url-matches-context? url ctx) ctx]))
     (filter (fn [[match _]] match))
-
     (sort-by first)
     last
     second
@@ -117,7 +116,7 @@
   (join-window-id-to-contexts @*contexts @*context->window-state @*ordered-windows-state))
 
 
-(defn clean-current-context []
+(defn <clean-current-context []
   (go
     (let [{:keys [id tabs] :as current-window} (js->clj-keyed-first (<! (windows/get-current (clj->js {:populate true}))))
 

@@ -21,6 +21,13 @@
 
   "commands" : {
 
+    "clean_context_kill": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+K",
+        "mac": "Command+Shift+K"
+      },
+      "description": "Close tabs in current window not matching context rules"
+    },
     "_execute_browser_action": {
       "suggested_key": {
         "windows": "Ctrl+E",

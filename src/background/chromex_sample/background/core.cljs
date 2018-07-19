@@ -5,6 +5,7 @@
             [chromex.logging :refer-macros [log info warn error group group-end]]
             [chromex.chrome-event-channel :refer [make-chrome-event-channel]]
             [chromex.protocols :refer [get-sender]]
+            [chromex.ext.commands :as commands]
             [chromex.ext.tabs :as tabs]
             [chromex.ext.windows :as windows]
             [chromex.ext.runtime :as runtime]
@@ -39,7 +40,7 @@
 
 (defmethod handle-client-message [:popup :clean-ctx] [[_ _ _]]
   (println "Will clean current context")
-  (tm/clean-current-context))
+  (tm/<clean-current-context))
 
 (defmethod handle-client-message [:popup :ping] [[_ _ message]]
   (println "got ping " message "from popup" " and keyword is " ::runtime/on-connect))
@@ -86,6 +87,7 @@
         ::windows/on-removed (tm/handle-closed-window! (first event-args))
         ::windows/on-focus-changed (tm/handle-window-focused! (first (js->clj-keyed event-args)))
         ::tabs/on-updated (<! (tm/process-updated-tab! event-args))
+        ::commands/on-command (<! (tm/<clean-current-context))
         nil))))
 
 (defn run-chrome-event-loop! [chrome-event-channel]
@@ -101,6 +103,7 @@
     (tabs/tap-on-updated-events chrome-event-channel)
     (windows/tap-on-removed-events chrome-event-channel)
     (windows/tap-on-focus-changed-events chrome-event-channel)
+    (commands/tap-on-command-events chrome-event-channel)
     (runtime/tap-all-events chrome-event-channel)
     (run-chrome-event-loop! chrome-event-channel)))
 
