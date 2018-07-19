@@ -1,7 +1,11 @@
-.list-box:hover {
+.list-item:hover {
     background-color: lightblue;
 }
 
-.list-box-highlighted {
+.list-item-highlighted {
     background-color: blue;
+}
+
+#list-component {
+    outline: none;  
 }

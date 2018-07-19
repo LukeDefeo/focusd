@@ -12,7 +12,7 @@
 (defn wrap-in-div [highlighted? click-Handler comp]
   ;;for some reason when i set background color dynamically based on highlighted? it prevent hover state from working
   ;;seting the class dynamically is a work around
-  [:div {:class (if highlighted? "list-box-highlighted" "list-box")
+  [:div {:class (if highlighted? "list-item-highlighted" "list-item")
          :on-click click-Handler} comp])
 
 (def down-arrow 40)
@@ -39,7 +39,7 @@
     (fn [items render-fn selected-fn]
       (let [{:keys [index]} @state]
         [v-box
-         :attr {:id          "list-box"
+         :attr {:id          "list-component"
                 :tab-index   0
                 :on-key-down (fn [key]
                                (let [code (-> key .-keyCode)]
